@@ -1,1 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BacktestLab — Docs</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html">
+        <span class="brand-mark">▣</span>
+        <span class="brand-name">BacktestLab</span>
+      </a>
+      <nav class="nav">
+        <a href="app.html">App</a>
+        <a class="active" href="docs.html">Docs</a>
+        <a href="pricing.html">Pricing</a>
+        <a href="contact.html" class="btn btn-ghost">Contact</a>
+      </nav>
+    </div>
+  </header>
 
+  <main>
+    <section class="section">
+      <div class="container">
+        <h1>Docs</h1>
+        <p class="sublead">How this MVP works, and what to build next.</p>
+
+        <div class="two-col">
+          <div class="card">
+            <h2>How to run a backtest</h2>
+            <ol class="list">
+              <li>Open <a href="app.html">App</a></li>
+              <li>Step or Play through candles</li>
+              <li>Enter trades with SL/TP in R</li>
+              <li>Let price hit SL/TP (auto close) or close manually</li>
+              <li>Review Journal + Analytics</li>
+            </ol>
+          </div>
+
+          <div class="card">
+            <h2>What “R” means</h2>
+            <p class="muted">
+              R is a risk multiple. If you risk $25 and make +2R, you can think of it as “+2 units” regardless of account size.
+              This makes strategy results comparable across time.
+            </p>
+            <ul class="list">
+              <li>Win = positive R</li>
+              <li>Loss = negative R</li>
+              <li>Expectancy = average R per trade</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Roadmap for a “real” FXReplay-style product</h2>
+          <div class="feature-grid">
+            <div class="feature">
+              <h3>Real historical market data</h3>
+              <p>Connect a provider, store candles, and stream them to the replay engine.</p>
+            </div>
+            <div class="feature">
+              <h3>Proper charting</h3>
+              <p>Integrate a chart library for indicators, drawings, and scaling.</p>
+            </div>
+            <div class="feature">
+              <h3>User accounts + cloud journal</h3>
+              <p>Auth, trade history, filters, tagging, uploads, screenshots.</p>
+            </div>
+            <div class="feature">
+              <h3>Payments</h3>
+              <p>Stripe plans for Pro/Team and feature gating.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout">
+          <div>
+            <h3>Want the next step?</h3>
+            <p class="muted">Tell me what market you care about (Forex, Futures, Stocks, Crypto) and I’ll shape the V2 architecture.</p>
+          </div>
+          <a class="btn btn-primary" href="contact.html">Contact</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="muted">© <span id="y"></span> BacktestLab.</div>
+      <div class="footer-links">
+        <a href="app.html">App</a>
+        <a href="pricing.html">Pricing</a>
+        <a href="contact.html">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
