@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>BacktestLab App — Replay Simulator</title>
-  <meta name="description" content="Candle-by-candle replay simulator with journaling and analytics." />
+  <title>BacktestLab App — Playback Simulator</title>
+  <meta name="description" content="Candle-by-candle Playback simulator with journaling and analytics." />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body class="app-body">
@@ -30,7 +30,7 @@
       <section class="panel chart-panel">
         <div class="panel-top">
           <div class="panel-title">
-            <h1>Replay Session</h1>
+            <h1>Playback Session</h1>
             <p class="muted tiny">This is an MVP simulator using generated candle data (no real feed yet).</p>
           </div>
 
@@ -42,7 +42,7 @@
         </div>
 
         <div class="chart-wrap">
-          <canvas id="chart" width="980" height="520" aria-label="Replay chart canvas"></canvas>
+          <canvas id="chart" width="980" height="520" aria-label="Playback chart canvas"></canvas>
           <div class="chart-hud">
             <div class="hud-item">
               <div class="muted tiny">Candle</div>
@@ -90,10 +90,10 @@
         <div class="tradingview-bridge">
           <div>
             <h2>Backtest through TradingView</h2>
-            <p class="muted">Push the same symbol and timeframe into TradingView so you can use Bar Replay or the Strategy Tester with real market data.</p>
+            <p class="muted">Push the same symbol and timeframe into TradingView so you can use Bar Playback or the Strategy Tester with real market data.</p>
             <ul class="tiny muted tv-list">
               <li>We prefill the symbol/timeframe and open a new TradingView tab.</li>
-              <li>Use TradingView’s <strong>Bar Replay</strong> and <strong>Strategy Tester</strong> for data + metrics while you keep journaling here.</li>
+              <li>Use TradingView’s <strong>Bar Playback</strong> and <strong>Strategy Tester</strong> for data + metrics while you keep journaling here.</li>
               <li>Best results with free symbols like <code>OANDA:EURUSD</code>, <code>FX:GBPUSD</code>, <code>BINANCE:BTCUSDT</code>.</li>
             </ul>
           </div>
