@@ -163,26 +163,40 @@
 
             <div class="form-grid">
               <div class="field">
-                <label for="direction">Direction</label>
+                <label for="direction">Side</label>
                 <select id="direction" class="select">
-                  <option value="long" selected>Long</option>
-                  <option value="short">Short</option>
+                  <option value="long" selected>Buy (Long)</option>
+                  <option value="short">Sell (Short)</option>
                 </select>
               </div>
 
               <div class="field">
-                <label for="risk">Risk ($)</label>
-                <input id="risk" class="input" type="number" min="1" step="1" value="25" />
+                <label for="orderType">Order type</label>
+                <select id="orderType" class="select">
+                  <option value="market" selected>Market</option>
+                  <option value="limit">Limit</option>
+                  <option value="stop">Stop</option>
+                </select>
               </div>
 
               <div class="field">
-                <label for="slR">Stop (R)</label>
-                <input id="slR" class="input" type="number" min="0.25" step="0.25" value="1" />
+                <label for="portion">Portion size (%)</label>
+                <input id="portion" class="input" type="number" min="1" max="100" step="1" value="25" />
               </div>
 
               <div class="field">
-                <label for="tpR">Target (R)</label>
-                <input id="tpR" class="input" type="number" min="0.25" step="0.25" value="2" />
+                <label for="entryPrice">Entry price</label>
+                <input id="entryPrice" class="input" type="number" step="0.00001" placeholder="Use current price for market" />
+              </div>
+
+              <div class="field">
+                <label for="stopPrice">Stop loss</label>
+                <input id="stopPrice" class="input" type="number" step="0.00001" placeholder="Auto-fill if empty" />
+              </div>
+
+              <div class="field">
+                <label for="takeProfit">Take profit</label>
+                <input id="takeProfit" class="input" type="number" step="0.00001" placeholder="Auto-fill if empty" />
               </div>
 
               <div class="field span2">
@@ -196,8 +210,16 @@
               </div>
             </div>
 
+            <div class="trade-toggles">
+              <label class="toggle">
+                <input id="autoBE" type="checkbox" checked />
+                <span class="toggle-label">Auto-breakeven at +1R</span>
+              </label>
+              <span class="muted tiny">Supports market, stop, and limit orders with SL/TP + breakeven automation.</span>
+            </div>
+
             <div class="trade-actions">
-              <button class="btn btn-primary" id="btnEnter" type="button">Enter @ Market</button>
+              <button class="btn btn-primary" id="btnEnter" type="button">Place order</button>
               <button class="btn btn-ghost" id="btnClose" type="button" disabled>Close Trade</button>
             </div>
 

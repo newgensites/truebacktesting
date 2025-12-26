@@ -28,11 +28,14 @@
   const hudOpenPL = $("hudOpenPL");
 
   const directionSel = $("direction");
-  const riskInp = $("risk");
-  const slRInp = $("slR");
-  const tpRInp = $("tpR");
+  const orderTypeSel = $("orderType");
+  const portionInp = $("portion");
+  const entryPriceInp = $("entryPrice");
+  const stopPriceInp = $("stopPrice");
+  const takeProfitInp = $("takeProfit");
   const setupInp = $("setup");
   const notesInp = $("notes");
+  const autoBEInp = $("autoBE");
 
   const btnEnter = $("btnEnter");
   const btnClose = $("btnClose");
@@ -142,6 +145,11 @@
   // ---------- Chart rendering ----------
   function round5(x) {
     return Math.round(x * 100000) / 100000;
+  }
+
+  function toNumber(value, fallback) {
+    const v = Number(value);
+    return Number.isFinite(v) ? v : fallback;
   }
 
   function colorWithAlpha(hex, alpha = 0.7) {
@@ -315,9 +323,11 @@
     if (!trade || !trade.isOpen) return 0;
     const p = currentPrice();
     const riskDist = Math.abs(trade.entry - trade.sl);
+    const baseRisk = trade.initialRiskDist || riskDist;
+    if (!baseRisk) return 0;
     const dir = trade.direction === "long" ? 1 : -1;
     const move = (p - trade.entry) * dir;
-    return move / riskDist;
+    return move / baseRisk;
   }
 
   function maybeAutoClose() {
@@ -348,15 +358,26 @@
     }
   }
 
+  function maybeAutoBreakeven() {
+    if (!trade || !trade.isOpen || !trade.autoBE || trade.movedToBE) return;
+    const openR = computeOpenR();
+    if (openR >= 1) {
+      trade.sl = trade.entry;
+      trade.movedToBE = true;
+    }
+  }
+
   function enterTrade() {
     if (trade && trade.isOpen) return;
 
     const direction = directionSel.value;
-    const risk = Math.max(1, Number(riskInp.value || 25));
-    const slR = Math.max(0.25, Number(slRInp.value || 1));
-    const tpR = Math.max(0.25, Number(tpRInp.value || 2));
+    const orderType = orderTypeSel ? orderTypeSel.value : "market";
+    const portion = Math.max(1, Math.min(100, toNumber(portionInp && portionInp.value, 25)));
 
-    const entry = currentPrice();
+    const manualEntry = toNumber(entryPriceInp && entryPriceInp.value, NaN);
+    const entry = (orderType === "market" || !Number.isFinite(manualEntry))
+      ? currentPrice()
+      : manualEntry;
 
     // Define risk distance using a simple ATR-ish proxy from recent candles
     const lookback = 14;
@@ -367,18 +388,24 @@
     avgRange = avgRange / Math.min(lookback, idx + 1);
     const baseRiskDist = Math.max(avgRange * 0.6, 0.0004); // minimum distance
 
-    const riskDist = baseRiskDist * slR;
+    const riskDist = baseRiskDist;
     const dir = direction === "long" ? 1 : -1;
 
-    const sl = entry - dir * riskDist;
-    const tp = entry + dir * (riskDist * (tpR / slR));
+    const userSL = toNumber(stopPriceInp && stopPriceInp.value, NaN);
+    const userTP = toNumber(takeProfitInp && takeProfitInp.value, NaN);
+
+    const sl = Number.isFinite(userSL) ? userSL : (entry - dir * riskDist);
+    const tp = Number.isFinite(userTP) ? userTP : (entry + dir * (riskDist * 2));
+    const initialRiskDist = Math.abs(entry - sl) || riskDist;
 
     trade = {
       isOpen: true,
       direction,
-      risk,
-      slR,
-      tpR,
+      orderType,
+      portion,
+      autoBE: autoBEInp ? !!autoBEInp.checked : false,
+      movedToBE: false,
+      initialRiskDist,
       entry,
       sl,
       tp,
@@ -397,7 +424,7 @@
     if (!trade || !trade.isOpen) return;
 
     const dir = trade.direction === "long" ? 1 : -1;
-    const riskDist = Math.abs(trade.entry - trade.sl);
+    const riskDist = trade.initialRiskDist || Math.abs(trade.entry - trade.sl) || 1e-6;
     const r = ((exitPrice - trade.entry) * dir) / riskDist;
 
     const row = {
@@ -579,6 +606,7 @@
     const clamped = Math.max(0, Math.min(targetIndex, candles.length - 1));
     idx = clamped;
     maybeAutoClose();
+    maybeAutoBreakeven();
     setReadout();
     draw(candles, idx, trade);
     updateHUD();
@@ -611,6 +639,7 @@
   function step(dir) {
     idx = Math.min(candles.length - 1, Math.max(0, idx + dir));
     maybeAutoClose();
+    maybeAutoBreakeven();
     setReadout();
     draw(candles, idx, trade);
     updateHUD();
