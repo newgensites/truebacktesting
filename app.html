@@ -1,1 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BacktestLab App — Replay Simulator</title>
+  <meta name="description" content="Candle-by-candle replay simulator with journaling and analytics." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="app-body">
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html">
+        <span class="brand-mark">▣</span>
+        <span class="brand-name">BacktestLab</span>
+      </a>
 
+      <nav class="nav">
+        <a class="active" href="app.html">App</a>
+        <a href="docs.html">Docs</a>
+        <a href="pricing.html">Pricing</a>
+        <a href="contact.html" class="btn btn-ghost">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="app">
+    <div class="container app-grid">
+      <!-- LEFT: CHART + CONTROLS -->
+      <section class="panel chart-panel">
+        <div class="panel-top">
+          <div class="panel-title">
+            <h1>Replay Session</h1>
+            <p class="muted tiny">This is an MVP simulator using generated candle data (no real feed yet).</p>
+          </div>
+
+          <div class="session-badges">
+            <span class="tag" id="symbolTag">EURUSD</span>
+            <span class="tag" id="tfTag">M5</span>
+            <span class="tag" id="speedTag">Speed 1×</span>
+          </div>
+        </div>
+
+        <div class="chart-wrap">
+          <canvas id="chart" width="980" height="520" aria-label="Replay chart canvas"></canvas>
+          <div class="chart-hud">
+            <div class="hud-item">
+              <div class="muted tiny">Candle</div>
+              <div class="hud-value" id="hudIndex">—</div>
+            </div>
+            <div class="hud-item">
+              <div class="muted tiny">Price</div>
+              <div class="hud-value" id="hudPrice">—</div>
+            </div>
+            <div class="hud-item">
+              <div class="muted tiny">Open P/L</div>
+              <div class="hud-value" id="hudOpenPL">—</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <div class="controls-left">
+            <button class="btn btn-ghost" id="btnReset" type="button">Reset</button>
+            <button class="btn btn-ghost" id="btnPrev" type="button">◀ Step</button>
+            <button class="btn btn-primary" id="btnPlay" type="button">Play</button>
+            <button class="btn btn-ghost" id="btnNext" type="button">Step ▶</button>
+          </div>
+
+          <div class="controls-right">
+            <label class="muted tiny" for="speed">Speed</label>
+            <select id="speed" class="select">
+              <option value="0.5">0.5×</option>
+              <option value="1" selected>1×</option>
+              <option value="2">2×</option>
+              <option value="4">4×</option>
+              <option value="8">8×</option>
+              <option value="10">10×</option>
+            </select>
+
+            <label class="muted tiny" for="seed">Session</label>
+            <select id="seed" class="select">
+              <option value="A" selected>Seed A</option>
+              <option value="B">Seed B</option>
+              <option value="C">Seed C</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: TRADE + JOURNAL + ANALYTICS -->
+      <aside class="panel side-panel">
+        <div class="tabs">
+          <button class="tab active" data-tab="trade" type="button">Trade</button>
+          <button class="tab" data-tab="journal" type="button">Journal</button>
+          <button class="tab" data-tab="stats" type="button">Analytics</button>
+        </div>
+
+        <!-- TRADE TAB -->
+        <div class="tabpane active" id="tab-trade">
+          <div class="card">
+            <h2>Place a trade</h2>
+
+            <div class="form-grid">
+              <div class="field">
+                <label for="direction">Direction</label>
+                <select id="direction" class="select">
+                  <option value="long" selected>Long</option>
+                  <option value="short">Short</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="risk">Risk ($)</label>
+                <input id="risk" class="input" type="number" min="1" step="1" value="25" />
+              </div>
+
+              <div class="field">
+                <label for="slR">Stop (R)</label>
+                <input id="slR" class="input" type="number" min="0.25" step="0.25" value="1" />
+              </div>
+
+              <div class="field">
+                <label for="tpR">Target (R)</label>
+                <input id="tpR" class="input" type="number" min="0.25" step="0.25" value="2" />
+              </div>
+
+              <div class="field span2">
+                <label for="setup">Setup tag</label>
+                <input id="setup" class="input" type="text" placeholder="e.g., breakout, pullback, sweep" />
+              </div>
+
+              <div class="field span2">
+                <label for="notes">Notes</label>
+                <textarea id="notes" class="textarea" rows="3" placeholder="Why this trade? What would invalidate it?"></textarea>
+              </div>
+            </div>
+
+            <div class="trade-actions">
+              <button class="btn btn-primary" id="btnEnter" type="button">Enter @ Market</button>
+              <button class="btn btn-ghost" id="btnClose" type="button" disabled>Close Trade</button>
+            </div>
+
+            <div class="trade-readout">
+              <div class="readout">
+                <div class="muted tiny">Entry</div>
+                <div class="value" id="roEntry">—</div>
+              </div>
+              <div class="readout">
+                <div class="muted tiny">SL</div>
+                <div class="value" id="roSL">—</div>
+              </div>
+              <div class="readout">
+                <div class="muted tiny">TP</div>
+                <div class="value" id="roTP">—</div>
+              </div>
+              <div class="readout">
+                <div class="muted tiny">Open R</div>
+                <div class="value" id="roOpenR">—</div>
+              </div>
+            </div>
+
+            <p class="tiny muted">
+              MVP math: We score outcomes in <strong>R</strong> (risk multiples) so results translate across account sizes.
+            </p>
+          </div>
+
+          <div class="card">
+            <h2>Session tools</h2>
+            <div class="row">
+              <button class="btn btn-ghost" id="btnClearJournal" type="button">Clear Journal</button>
+              <button class="btn btn-ghost" id="btnExport" type="button">Export CSV</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- JOURNAL TAB -->
+        <div class="tabpane" id="tab-journal">
+          <div class="card">
+            <h2>Journal</h2>
+            <p class="muted tiny">Trades are stored in your browser (LocalStorage) for this MVP.</p>
+
+            <div class="table-wrap">
+              <table class="table" id="journalTable">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Dir</th>
+                    <th>Setup</th>
+                    <th>Entry</th>
+                    <th>Exit</th>
+                    <th>R</th>
+                    <th>Result</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+
+            <div class="tiny muted">
+              Tip: Use Setup tags so you can see what patterns actually pay.
+            </div>
+          </div>
+        </div>
+
+        <!-- STATS TAB -->
+        <div class="tabpane" id="tab-stats">
+          <div class="card">
+            <h2>Analytics</h2>
+            <div class="stats-grid">
+              <div class="statcard">
+                <div class="muted tiny">Trades</div>
+                <div class="statbig" id="stTrades">0</div>
+              </div>
+              <div class="statcard">
+                <div class="muted tiny">Win rate</div>
+                <div class="statbig" id="stWinRate">0%</div>
+              </div>
+              <div class="statcard">
+                <div class="muted tiny">Avg R</div>
+                <div class="statbig" id="stAvgR">0.00</div>
+              </div>
+              <div class="statcard">
+                <div class="muted tiny">Expectancy</div>
+                <div class="statbig" id="stExp">0.00</div>
+              </div>
+              <div class="statcard">
+                <div class="muted tiny">Profit factor</div>
+                <div class="statbig" id="stPF">—</div>
+              </div>
+              <div class="statcard">
+                <div class="muted tiny">Max drawdown (R)</div>
+                <div class="statbig" id="stDD">0.00</div>
+              </div>
+            </div>
+
+            <div class="card subtle">
+              <h3 class="h3">How to read this</h3>
+              <ul class="list">
+                <li><strong>Expectancy</strong> = average R per trade (edge indicator).</li>
+                <li><strong>Profit factor</strong> = gross wins ÷ gross losses.</li>
+                <li><strong>Drawdown</strong> = worst peak-to-valley in cumulative R.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
