@@ -63,6 +63,7 @@
   const speedTag = $("speedTag");
   const symbolTag = $("symbolTag");
   const tfTag = $("tfTag");
+  const sessionTag = $("sessionTag");
 
   const tvForm = $("tvForm");
   const tvSymbol = $("tvSymbol");
@@ -71,9 +72,14 @@
   const bullColorInp = $("bullColor");
   const bearColorInp = $("bearColor");
 
+  const btnSnapshot = $("btnSnapshot");
+  const journalNotice = $("journalNotice");
+
   const DAY_LENGTH = 288; // 24h of 5m candles
   const SESSION_LENGTH = 72; // 6h blocks for "next session" jumps
   const NY_OFFSET = 156; // 13:00 session start in 5m candles (approx New York open)
+  const MAX_JOURNAL_ENTRIES = 500; // guard against laggy tables
+  const MAX_RENDERED_ROWS = 300; // limit DOM nodes rendered
   const SESSION_MARKERS = [
     { name: "London open", offset: minutesToIndex(3 * 60), label: "03:00", color: "rgba(94,234,212,.9)" },
     { name: "Asia open", offset: minutesToIndex(18 * 60 + 30), label: "18:30", color: "rgba(147,197,253,.9)" },
@@ -204,6 +210,21 @@
 
   function minutesToIndex(minutes) {
     return Math.round(minutes / 5);
+  }
+
+  function indexToMinutes(index) {
+    return (index % DAY_LENGTH) * 5;
+  }
+
+  function currentSessionLabel(index) {
+    const m = indexToMinutes(index);
+    const ASIA_START = 18 * 60 + 30;
+    const LONDON_START = 3 * 60;
+    const NY_START = 9 * 60 + 30;
+
+    if (m >= ASIA_START || m < LONDON_START) return "Asia";
+    if (m >= LONDON_START && m < NY_START) return "London";
+    return "New York";
   }
 
   function sessionMarkersInView(startIndex, endIndex) {
@@ -386,6 +407,7 @@
   let timer = null;
 
   let trade = null; // current open trade or null
+  let lastSnapshot = null;
 
   let bullColor = bullColorInp ? bullColorInp.value : "#22c55e";
   let bearColor = bearColorInp ? bearColorInp.value : "#ef4444";
@@ -562,6 +584,7 @@
     const dir = trade.direction === "long" ? 1 : -1;
     const riskDist = trade.initialRiskDist || Math.abs(trade.entry - trade.sl) || 1e-6;
     const r = ((exitPrice - trade.entry) * dir) / riskDist;
+    const stopPoints = Math.abs(trade.entry - trade.sl) * 10000;
 
     const row = {
       id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random(),
@@ -576,12 +599,18 @@
       exitIndex: idx,
       openedAt: trade.openedAt,
       closedAt: new Date().toISOString(),
-      notes: trade.notes
+      notes: trade.notes,
+      sl: trade.sl,
+      tp: trade.tp,
+      stopPoints,
+      snapshot: trade.snapshot || null,
+      session: currentSessionLabel(trade.entryIndex)
     };
 
     const journal = loadJournal();
     journal.push(row);
-    saveJournal(journal);
+    const trimmed = applyJournalGuard(journal);
+    saveJournal(trimmed);
 
     trade.isOpen = false;
     trade = null;
@@ -595,10 +624,19 @@
 
   // ---------- Journal + stats ----------
   function renderJournal() {
-    const journal = loadJournal();
+    const stored = loadJournal();
+    const journal = applyJournalGuard(stored);
+    if (journal.length !== stored.length) saveJournal(journal);
     journalTable.innerHTML = "";
 
-    journal.slice().reverse().forEach((t, i) => {
+    const recent = journal.slice(Math.max(0, journal.length - MAX_RENDERED_ROWS));
+    if (journalNotice) {
+      journalNotice.textContent = recent.length < journal.length
+        ? `Showing latest ${recent.length}/${journal.length} trades (older hidden for performance).`
+        : "";
+    }
+
+    recent.slice().reverse().forEach((t, i) => {
       const tr = document.createElement("tr");
       const rr = Number(t.r);
 
@@ -606,21 +644,44 @@
       if (rr > 0) badgeClass = "badge-good";
       if (rr < 0) badgeClass = "badge-bad";
 
+      const stopPts = Number(t.stopPoints || Math.abs(Number(t.entry) - Number(t.sl)) * 10000 || 0);
+      const snapshotCell = t.snapshot
+        ? `<a class="snapshot-link" data-id="${t.id}" href="#">Open</a>`
+        : "—";
+
       tr.innerHTML = `
         <td>${journal.length - i}</td>
         <td>${t.direction === "long" ? "Long" : "Short"}</td>
         <td title="${escapeHtml(t.notes || "")}">${escapeHtml(t.setup || "—")}</td>
         <td>${Number(t.entry).toFixed(5)}</td>
         <td>${Number(t.exit).toFixed(5)}</td>
+        <td>${stopPts.toFixed(1)}</td>
         <td class="${badgeClass}">${rr.toFixed(2)}</td>
         <td class="${badgeClass}">${escapeHtml(t.result)}</td>
+        <td>${formatDateTime(t.openedAt)}</td>
+        <td>${formatDateTime(t.closedAt)}</td>
+        <td>${snapshotCell}</td>
       `;
       journalTable.appendChild(tr);
+    });
+
+    journalTable.querySelectorAll(".snapshot-link").forEach((a) => {
+      a.addEventListener("click", (e) => {
+        e.preventDefault();
+        const id = a.dataset.id;
+        const row = journal.find((x) => x.id === id);
+        if (row && row.snapshot) {
+          const win = window.open();
+          win.document.write(`<img src="${row.snapshot}" alt="Trade snapshot" style="max-width:100%;height:auto" />`);
+        }
+      });
     });
   }
 
   function renderStats() {
-    const j = loadJournal();
+    const stored = loadJournal();
+    const j = applyJournalGuard(stored);
+    if (j.length !== stored.length) saveJournal(j);
     const n = j.length;
 
     stTrades.textContent = String(n);
@@ -695,6 +756,29 @@
     return String(s).replace(/[&<>"']/g, (m) => ({
       "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
     }[m]));
+  }
+
+  function formatDateTime(value) {
+    if (!value) return "—";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return "—";
+    return d.toLocaleString();
+  }
+
+  function captureSnapshot() {
+    try {
+      const data = canvas.toDataURL("image/png");
+      lastSnapshot = data;
+      return data;
+    } catch (e) {
+      console.error("Snapshot failed", e);
+      return null;
+    }
+  }
+
+  function setNotice(message) {
+    if (!journalNotice) return;
+    journalNotice.textContent = message || "";
   }
 
   // ---------- TradingView bridge ----------
@@ -776,6 +860,7 @@
     const p = currentPrice();
     hudIndex.textContent = String(idx);
     hudPrice.textContent = p.toFixed(5);
+    setSessionLabel();
 
     if (trade && trade.isOpen) {
       const openR = computeOpenR();
@@ -788,6 +873,12 @@
       hudOpenPL.textContent = "—";
       hudOpenPL.style.color = "rgba(234,240,255,.68)";
     }
+  }
+
+  function setSessionLabel() {
+    if (!sessionTag) return;
+    const label = currentSessionLabel(idx);
+    sessionTag.textContent = `Session ${label}`;
   }
 
   function jumpTo(targetIndex) {
@@ -835,8 +926,15 @@
   }
 
   function setSpeedTag() {
+    const selected = speedSel.selectedOptions && speedSel.selectedOptions[0];
+    const label = (selected && selected.dataset && selected.dataset.label) || `${Math.round(Number(speedSel.value) || 1000)}ms`;
+    speedTag.textContent = `Speed ${label}`;
+  }
+
+  function getSpeedMs() {
     const v = Number(speedSel.value);
-    speedTag.textContent = `Speed ${v}×`;
+    if (!Number.isFinite(v) || v <= 0) return 1000;
+    return v;
   }
 
   function play() {
@@ -851,9 +949,7 @@
         return;
       }
       step(+1);
-      const speed = Number(speedSel.value);
-      const baseMs = 350;
-      const ms = Math.max(35, baseMs / speed);
+      const ms = Math.max(35, getSpeedMs());
       timer = setTimeout(tick, ms);
     };
     tick();
@@ -907,6 +1003,20 @@
     if (!trade || !trade.isOpen) return;
     closeTrade(currentPrice(), "Manual close");
   });
+
+  if (btnSnapshot) {
+    btnSnapshot.addEventListener("click", () => {
+      if (!trade || !trade.isOpen) {
+        setNotice("Open a trade to tie a snapshot to the journal entry.");
+        return;
+      }
+      const snap = captureSnapshot();
+      if (snap) {
+        trade.snapshot = snap;
+        setNotice("Snapshot saved for this trade.");
+      }
+    });
+  }
 
   btnClearJournal.addEventListener("click", () => {
     saveJournal([]);

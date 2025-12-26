@@ -37,7 +37,8 @@
           <div class="session-badges">
             <span class="tag" id="symbolTag">EURUSD</span>
             <span class="tag" id="tfTag">M5</span>
-            <span class="tag" id="speedTag">Speed 1×</span>
+            <span class="tag" id="speedTag">Speed 1s</span>
+            <span class="tag session-tag" id="sessionTag">Session —</span>
           </div>
         </div>
 
@@ -70,12 +71,18 @@
           <div class="controls-right">
             <label class="muted tiny" for="speed">Speed</label>
             <select id="speed" class="select">
-              <option value="0.5">0.5×</option>
-              <option value="1" selected>1×</option>
-              <option value="2">2×</option>
-              <option value="4">4×</option>
-              <option value="8">8×</option>
-              <option value="10">10×</option>
+              <option value="1000" data-label="1s" selected>1s</option>
+              <option value="5000" data-label="5s">5s</option>
+              <option value="10000" data-label="10s">10s</option>
+              <option value="15000" data-label="15s">15s</option>
+              <option value="30000" data-label="30s">30s</option>
+              <option value="60000" data-label="1m">1m</option>
+              <option value="300000" data-label="5m">5m</option>
+              <option value="600000" data-label="10m">10m</option>
+              <option value="1800000" data-label="30m">30m</option>
+              <option value="3600000" data-label="1h">1h</option>
+              <option value="7200000" data-label="2h">2h</option>
+              <option value="14400000" data-label="4h">4h</option>
             </select>
 
             <label class="muted tiny" for="seed">Session</label>
@@ -246,6 +253,7 @@
             <div class="trade-actions">
               <button class="btn btn-primary" id="btnEnter" type="button">Place order</button>
               <button class="btn btn-ghost" id="btnClose" type="button" disabled>Close Trade</button>
+              <button class="btn btn-ghost" id="btnSnapshot" type="button">Snapshot</button>
             </div>
 
             <div class="trade-readout">
@@ -300,8 +308,12 @@
                     <th>Setup</th>
                     <th>Entry</th>
                     <th>Exit</th>
+                    <th>Stop pts</th>
                     <th>R</th>
                     <th>Result</th>
+                    <th>Opened</th>
+                    <th>Closed</th>
+                    <th>Snapshot</th>
                   </tr>
                 </thead>
                 <tbody></tbody>
@@ -309,7 +321,8 @@
             </div>
 
             <div class="tiny muted">
-              Tip: Use Setup tags so you can see what patterns actually pay.
+              Tip: Use Setup tags so you can see what patterns actually pay. Journals auto-trim to avoid lag.
+              <span id="journalNotice" class="notice"></span>
             </div>
           </div>
         </div>
