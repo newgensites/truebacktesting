@@ -70,6 +70,11 @@
   const DAY_LENGTH = 288; // 24h of 5m candles
   const SESSION_LENGTH = 72; // 6h blocks for "next session" jumps
   const NY_OFFSET = 156; // 13:00 session start in 5m candles (approx New York open)
+  const SESSION_MARKERS = [
+    { name: "London open", offset: minutesToIndex(3 * 60), label: "03:00", color: "rgba(94,234,212,.9)" },
+    { name: "Asia open", offset: minutesToIndex(18 * 60 + 30), label: "18:30", color: "rgba(147,197,253,.9)" },
+    { name: "New York open", offset: minutesToIndex(9 * 60 + 30), label: "09:30", color: "rgba(248,180,0,.9)" },
+  ];
 
   // Tabs
   document.querySelectorAll(".tab").forEach((b) => {
@@ -167,6 +172,27 @@
     return hex;
   }
 
+  function minutesToIndex(minutes) {
+    return Math.round(minutes / 5);
+  }
+
+  function sessionMarkersInView(startIndex, endIndex) {
+    const markers = [];
+    const firstDay = Math.floor(startIndex / DAY_LENGTH) - 1; // include prior day for near-open views
+    const lastDay = Math.floor(endIndex / DAY_LENGTH) + 1;
+
+    for (let day = firstDay; day <= lastDay; day++) {
+      const base = day * DAY_LENGTH;
+      SESSION_MARKERS.forEach((m) => {
+        const idx = base + m.offset;
+        if (idx >= startIndex - DAY_LENGTH && idx <= endIndex + DAY_LENGTH) {
+          markers.push({ ...m, index: idx });
+        }
+      });
+    }
+    return markers;
+  }
+
   function draw(candles, idx, trade) {
     const W = canvas.width;
     const H = canvas.height;
@@ -177,6 +203,7 @@
     const windowSize = 80;
     const start = Math.max(0, idx - windowSize + 1);
     const view = candles.slice(start, idx + 1);
+    const end = start + view.length - 1;
 
     // Price range
     let minP = Infinity, maxP = -Infinity;
@@ -211,6 +238,42 @@
     const cw = Math.max(6, Math.floor(W / (view.length + 2)));
     const gap = Math.max(2, Math.floor(cw * 0.25));
     const bodyW = cw - gap;
+
+    // Session open markers
+    const markers = sessionMarkersInView(start, end);
+    markers.forEach((m) => {
+      if (m.index < 0 || m.index >= candles.length) return;
+      const x = 20 + (m.index - start) * cw + bodyW / 2;
+
+      ctx.save();
+      ctx.setLineDash([6, 6]);
+      ctx.strokeStyle = m.color;
+      ctx.lineWidth = 1.5;
+      ctx.globalAlpha = 0.9;
+      ctx.beginPath();
+      ctx.moveTo(x, 10);
+      ctx.lineTo(x, H - 15);
+      ctx.stroke();
+      ctx.restore();
+
+      const label = `${m.name} (${m.label})`;
+      ctx.save();
+      ctx.font = "11px ui-sans-serif, system-ui";
+      const textWidth = ctx.measureText(label).width + 10;
+      const labelX = Math.min(Math.max(x - textWidth / 2, 6), W - textWidth - 6);
+      const labelY = 22;
+
+      ctx.fillStyle = "rgba(15,23,42,0.85)";
+      ctx.fillRect(labelX, labelY - 12, textWidth, 18);
+
+      ctx.strokeStyle = m.color;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(labelX, labelY - 12, textWidth, 18);
+
+      ctx.fillStyle = "rgba(226,232,240,0.92)";
+      ctx.fillText(label, labelX + 5, labelY + 2);
+      ctx.restore();
+    });
 
     for (let i = 0; i < view.length; i++) {
       const c = view[i];
