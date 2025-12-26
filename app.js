@@ -52,6 +52,12 @@
   const stDD = $("stDD");
 
   const speedTag = $("speedTag");
+  const symbolTag = $("symbolTag");
+  const tfTag = $("tfTag");
+
+  const tvForm = $("tvForm");
+  const tvSymbol = $("tvSymbol");
+  const tvTf = $("tvTf");
 
   // Tabs
   document.querySelectorAll(".tab").forEach((b) => {
@@ -98,7 +104,7 @@
       a = (a + 0x6D2B79F5) | 0;
       let t = Math.imul(a ^ (a >>> 15), 1 | a);
       t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-      return ((t ^ (t >>> 14)) >>> 0) counting / 4294967296;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
     };
   }
 
@@ -499,6 +505,29 @@
     }[m]));
   }
 
+  // ---------- TradingView bridge ----------
+  function setTradingViewBadges() {
+    if (symbolTag && tvSymbol) {
+      const clean = (tvSymbol.value || "EURUSD").trim();
+      symbolTag.textContent = clean.toUpperCase();
+    }
+    if (tfTag && tvTf) {
+      const chosen = tvTf.selectedOptions && tvTf.selectedOptions[0];
+      const label = chosen && chosen.dataset && chosen.dataset.label
+        ? chosen.dataset.label
+        : `${tvTf.value}m`;
+      tfTag.textContent = label;
+    }
+  }
+
+  function openTradingView() {
+    if (!tvSymbol || !tvTf) return;
+    const symbol = (tvSymbol.value || "EURUSD").trim();
+    const interval = tvTf.value || "60";
+    const url = `https://www.tradingview.com/chart/?symbol=${encodeURIComponent(symbol)}&interval=${encodeURIComponent(interval)}`;
+    window.open(url, "_blank", "noopener");
+  }
+
   // ---------- Replay controls ----------
   function updateHUD() {
     const p = currentPrice();
@@ -596,6 +625,16 @@
 
   btnExport.addEventListener("click", exportCSV);
 
+  if (tvForm) {
+    tvForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      openTradingView();
+    });
+  }
+
+  if (tvSymbol) tvSymbol.addEventListener("input", setTradingViewBadges);
+  if (tvTf) tvTf.addEventListener("change", setTradingViewBadges);
+
   // ---------- Init ----------
   setSpeedTag();
   renderJournal();
@@ -603,4 +642,5 @@
   setReadout();
   draw(candles, idx, trade);
   updateHUD();
+  setTradingViewBadges();
 })();
