@@ -87,6 +87,31 @@
           </div>
         </div>
 
+        <div class="session-actions">
+          <div class="session-shortcuts">
+            <div class="muted tiny">Session jumps</div>
+            <div class="shortcut-row">
+              <button class="chip" id="btnNextDay" type="button">Next day open</button>
+              <button class="chip" id="btnNextSession" type="button">Next session</button>
+              <button class="chip" id="btnNYSession" type="button">New York session</button>
+            </div>
+          </div>
+
+          <div class="session-colors">
+            <div class="muted tiny">Custom settings</div>
+            <div class="color-row">
+              <label class="color-pick">
+                <span>Bullish</span>
+                <input type="color" id="bullColor" value="#22c55e" aria-label="Bullish candle color" />
+              </label>
+              <label class="color-pick">
+                <span>Bearish</span>
+                <input type="color" id="bearColor" value="#ef4444" aria-label="Bearish candle color" />
+              </label>
+            </div>
+          </div>
+        </div>
+
         <div class="tradingview-bridge">
           <div>
             <h2>Backtest through TradingView</h2>

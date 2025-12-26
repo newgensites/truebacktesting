@@ -16,6 +16,9 @@
   const btnPrev = $("btnPrev");
   const btnPlay = $("btnPlay");
   const btnNext = $("btnNext");
+  const btnNextDay = $("btnNextDay");
+  const btnNextSession = $("btnNextSession");
+  const btnNYSession = $("btnNYSession");
 
   const speedSel = $("speed");
   const seedSel = $("seed");
@@ -58,6 +61,12 @@
   const tvForm = $("tvForm");
   const tvSymbol = $("tvSymbol");
   const tvTf = $("tvTf");
+  const bullColorInp = $("bullColor");
+  const bearColorInp = $("bearColor");
+
+  const DAY_LENGTH = 288; // 24h of 5m candles
+  const SESSION_LENGTH = 72; // 6h blocks for "next session" jumps
+  const NY_OFFSET = 156; // 13:00 session start in 5m candles (approx New York open)
 
   // Tabs
   document.querySelectorAll(".tab").forEach((b) => {
@@ -135,6 +144,21 @@
     return Math.round(x * 100000) / 100000;
   }
 
+  function colorWithAlpha(hex, alpha = 0.7) {
+    const value = hex.replace("#", "");
+    if (value.length === 3) {
+      const [r, g, b] = value.split("").map((c) => parseInt(c + c, 16));
+      return `rgba(${r},${g},${b},${alpha})`;
+    }
+    if (value.length === 6) {
+      const r = parseInt(value.slice(0, 2), 16);
+      const g = parseInt(value.slice(2, 4), 16);
+      const b = parseInt(value.slice(4, 6), 16);
+      return `rgba(${r},${g},${b},${alpha})`;
+    }
+    return hex;
+  }
+
   function draw(candles, idx, trade) {
     const W = canvas.width;
     const H = canvas.height;
@@ -201,7 +225,9 @@
       const yBot = Math.max(yOpen, yClose);
       const h = Math.max(3, yBot - yTop);
 
-      ctx.fillStyle = up ? "rgba(34,197,94,.70)" : "rgba(239,68,68,.70)";
+      const bullishFill = colorWithAlpha(bullColor, 0.7);
+      const bearishFill = colorWithAlpha(bearColor, 0.7);
+      ctx.fillStyle = up ? bullishFill : bearishFill;
       ctx.fillRect(x, yTop, bodyW, h);
 
       // Current candle marker
@@ -259,6 +285,9 @@
   let timer = null;
 
   let trade = null; // current open trade or null
+
+  let bullColor = bullColorInp ? bullColorInp.value : "#22c55e";
+  let bearColor = bearColorInp ? bearColorInp.value : "#ef4444";
 
   function currentPrice() {
     return candles[idx].close;
@@ -545,6 +574,40 @@
     }
   }
 
+  function jumpTo(targetIndex) {
+    pause();
+    const clamped = Math.max(0, Math.min(targetIndex, candles.length - 1));
+    idx = clamped;
+    maybeAutoClose();
+    setReadout();
+    draw(candles, idx, trade);
+    updateHUD();
+  }
+
+  function goToNextDayOpen() {
+    const dayStart = Math.floor(idx / DAY_LENGTH) * DAY_LENGTH;
+    const nextDay = dayStart + DAY_LENGTH;
+    jumpTo(nextDay);
+  }
+
+  function goToNextSession() {
+    const nextSession = Math.floor(idx / SESSION_LENGTH + 1) * SESSION_LENGTH;
+    jumpTo(nextSession);
+  }
+
+  function goToNYSession() {
+    const dayStart = Math.floor(idx / DAY_LENGTH) * DAY_LENGTH;
+    let target = dayStart + NY_OFFSET;
+    if (idx >= target) target += DAY_LENGTH;
+    jumpTo(target);
+  }
+
+  function updateColorSettings() {
+    bullColor = bullColorInp && bullColorInp.value ? bullColorInp.value : "#22c55e";
+    bearColor = bearColorInp && bearColorInp.value ? bearColorInp.value : "#ef4444";
+    draw(candles, idx, trade);
+  }
+
   function step(dir) {
     idx = Math.min(candles.length - 1, Math.max(0, idx + dir));
     maybeAutoClose();
@@ -611,6 +674,13 @@
 
   seedSel.addEventListener("change", resetSession);
 
+  if (btnNextDay) btnNextDay.addEventListener("click", goToNextDayOpen);
+  if (btnNextSession) btnNextSession.addEventListener("click", goToNextSession);
+  if (btnNYSession) btnNYSession.addEventListener("click", goToNYSession);
+
+  if (bullColorInp) bullColorInp.addEventListener("input", updateColorSettings);
+  if (bearColorInp) bearColorInp.addEventListener("input", updateColorSettings);
+
   btnEnter.addEventListener("click", enterTrade);
   btnClose.addEventListener("click", () => {
     if (!trade || !trade.isOpen) return;
@@ -639,6 +709,7 @@
   setSpeedTag();
   renderJournal();
   renderStats();
+  updateColorSettings();
   setReadout();
   draw(candles, idx, trade);
   updateHUD();
