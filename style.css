@@ -331,6 +331,37 @@ canvas{
 }
 .controls-left,.controls-right{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
 
+.session-actions{
+  display:flex;
+  justify-content:space-between;
+  gap:14px;
+  padding:10px 14px 14px;
+  border-top:1px solid var(--line);
+  background: rgba(255,255,255,.02);
+  flex-wrap:wrap;
+}
+.session-shortcuts,.session-colors{display:flex; flex-direction:column; gap:8px}
+.shortcut-row{display:flex; gap:8px; flex-wrap:wrap}
+.color-row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+.color-pick{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 10px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background: rgba(255,255,255,.03);
+  font-weight:700;
+}
+.color-pick input[type="color"]{
+  width:42px;
+  height:32px;
+  border:none;
+  background:transparent;
+  padding:0;
+  cursor:pointer;
+}
+
 .tradingview-bridge{
   display:grid;
   grid-template-columns: 1.1fr .9fr;
