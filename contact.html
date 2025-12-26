@@ -1,1 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BacktestLab — Contact</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html">
+        <span class="brand-mark">▣</span>
+        <span class="brand-name">BacktestLab</span>
+      </a>
+      <nav class="nav">
+        <a href="app.html">App</a>
+        <a href="docs.html">Docs</a>
+        <a href="pricing.html">Pricing</a>
+        <a class="active" href="contact.html">Contact</a>
+      </nav>
+    </div>
+  </header>
 
+  <main>
+    <section class="section">
+      <div class="container">
+        <h1>Contact</h1>
+        <p class="sublead">For the full build (real data, accounts, payments), reach out here.</p>
+
+        <div class="two-col">
+          <div class="card">
+            <h2>Send a message</h2>
+            <form id="contactForm" class="form">
+              <div class="field">
+                <label for="name">Name</label>
+                <input id="name" class="input" type="text" required />
+              </div>
+              <div class="field">
+                <label for="email">Email</label>
+                <input id="email" class="input" type="email" required />
+              </div>
+              <div class="field">
+                <label for="msg">Message</label>
+                <textarea id="msg" class="textarea" rows="5" required placeholder="What do you want to backtest? Forex, futures, crypto, etc."></textarea>
+              </div>
+              <button class="btn btn-primary" type="submit">Submit</button>
+              <p class="tiny muted" id="contactNote"></p>
+            </form>
+          </div>
+
+          <div class="card">
+            <h2>What to include</h2>
+            <ul class="list">
+              <li>Market (Forex/Futures/Stocks/Crypto)</li>
+              <li>Timeframes you need</li>
+              <li>Replay features you want (hotkeys, spreads, commissions)</li>
+              <li>Journaling needs (tags, screenshots, exports)</li>
+            </ul>
+            <p class="muted tiny">
+              MVP note: This form is front-end only (GitHub Pages). We can wire it to Formspree, Google Forms, or a backend later.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="muted">© <span id="y"></span> BacktestLab.</div>
+      <div class="footer-links">
+        <a href="docs.html">Docs</a>
+        <a href="pricing.html">Pricing</a>
+        <a href="app.html">App</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
