@@ -1,1 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BacktestLab — Pricing</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html">
+        <span class="brand-mark">▣</span>
+        <span class="brand-name">BacktestLab</span>
+      </a>
+      <nav class="nav">
+        <a href="app.html">App</a>
+        <a href="docs.html">Docs</a>
+        <a class="active" href="pricing.html">Pricing</a>
+        <a href="contact.html" class="btn btn-ghost">Contact</a>
+      </nav>
+    </div>
+  </header>
 
+  <main>
+    <section class="section">
+      <div class="container">
+        <h1>Pricing</h1>
+        <p class="sublead">Start with the simulator. Upgrade when you want real market data + accounts.</p>
+
+        <div class="pricing-grid">
+          <div class="price-card">
+            <div class="price-top">
+              <h2>Free</h2>
+              <p class="muted">Local demo + journaling</p>
+            </div>
+            <div class="price">$0</div>
+            <ul class="list">
+              <li>Replay simulator (generated data)</li>
+              <li>Manual entries</li>
+              <li>Local journal + analytics</li>
+              <li>CSV export</li>
+            </ul>
+            <a class="btn btn-primary" href="app.html">Use Free</a>
+          </div>
+
+          <div class="price-card highlight">
+            <div class="price-top">
+              <h2>Pro</h2>
+              <p class="muted">Serious testing workflow</p>
+            </div>
+            <div class="price">$19<span class="muted">/mo</span></div>
+            <ul class="list">
+              <li>Real historical data (API)</li>
+              <li>Symbol/timeframe library</li>
+              <li>Cloud journal + filters</li>
+              <li>Shareable reports</li>
+            </ul>
+            <a class="btn btn-primary" href="contact.html">Request Pro Build</a>
+          </div>
+
+          <div class="price-card">
+            <div class="price-top">
+              <h2>Team</h2>
+              <p class="muted">For coaches + communities</p>
+            </div>
+            <div class="price">$49<span class="muted">/mo</span></div>
+            <ul class="list">
+              <li>Multiple accounts</li>
+              <li>Templates + playbooks</li>
+              <li>Leaderboard + challenges</li>
+              <li>Admin analytics</li>
+            </ul>
+            <a class="btn btn-ghost" href="contact.html">Talk to us</a>
+          </div>
+        </div>
+
+        <div class="callout">
+          <div>
+            <h3>Want it to feel like a true trading platform?</h3>
+            <p class="muted">Next upgrades: real data feed, user auth, cloud journal, Stripe, and charting library integration.</p>
+          </div>
+          <a class="btn btn-primary" href="contact.html">Build the full version</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="muted">© <span id="y"></span> BacktestLab.</div>
+      <div class="footer-links">
+        <a href="docs.html">Docs</a>
+        <a href="app.html">App</a>
+        <a href="contact.html">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
