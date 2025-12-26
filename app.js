@@ -1,4 +1,4 @@
-/* BacktestLab MVP Replay App
+/* BacktestLab MVP Playback App
    - Generates deterministic candle data by seed
    - Candle-by-candle stepping and playback speed
    - Trade engine scored in R (risk multiples)
@@ -528,7 +528,7 @@
     window.open(url, "_blank", "noopener");
   }
 
-  // ---------- Replay controls ----------
+  // ---------- Playback controls ----------
   function updateHUD() {
     const p = currentPrice();
     hudIndex.textContent = String(idx);
