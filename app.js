@@ -67,6 +67,7 @@
   const tvForm = $("tvForm");
   const tvSymbol = $("tvSymbol");
   const tvTf = $("tvTf");
+  let tvScriptLoading = false;
   const bullColorInp = $("bullColor");
   const bearColorInp = $("bearColor");
 
@@ -697,6 +698,56 @@
   }
 
   // ---------- TradingView bridge ----------
+  function ensureTradingViewWidget(symbolInput, intervalInput) {
+    const container = document.getElementById("tvChartContainer");
+    if (!container) return;
+
+    const symbol = (symbolInput || (tvSymbol && tvSymbol.value) || "OANDA:EURUSD").trim();
+    const interval = String(intervalInput || (tvTf && tvTf.value) || "60");
+    container.innerHTML = "";
+
+    const renderWidget = () => {
+      if (!window.TradingView || !window.TradingView.widget) return;
+      new window.TradingView.widget({
+        autosize: true,
+        symbol,
+        interval,
+        container_id: "tvChartContainer",
+        theme: "dark",
+        style: "1",
+        withdateranges: true,
+        allow_symbol_change: true,
+        hide_side_toolbar: false,
+        studies: [
+          "MACD@tv-basicstudies",
+          "RSI@tv-basicstudies",
+          "StochasticRSI@tv-basicstudies",
+          "BollingerBandsR@tv-basicstudies",
+          "EMA@tv-basicstudies",
+        ],
+        toolbar_bg: "rgba(3,7,18,0.95)",
+        locale: "en",
+      });
+    };
+
+    if (window.TradingView && window.TradingView.widget) {
+      renderWidget();
+      return;
+    }
+
+    if (tvScriptLoading) {
+      setTimeout(() => ensureTradingViewWidget(symbol, interval), 120);
+      return;
+    }
+
+    tvScriptLoading = true;
+    const script = document.createElement("script");
+    script.id = "tv-widget-script";
+    script.src = "https://s3.tradingview.com/tv.js";
+    script.onload = renderWidget;
+    document.body.appendChild(script);
+  }
+
   function setTradingViewBadges() {
     if (symbolTag && tvSymbol) {
       const clean = (tvSymbol.value || "EURUSD").trim();
@@ -709,6 +760,7 @@
         : `${tvTf.value}m`;
       tfTag.textContent = label;
     }
+    ensureTradingViewWidget(tvSymbol && tvSymbol.value, tvTf && tvTf.value);
   }
 
   function openTradingView() {
@@ -868,6 +920,7 @@
     tvForm.addEventListener("submit", (e) => {
       e.preventDefault();
       openTradingView();
+      ensureTradingViewWidget(tvSymbol && tvSymbol.value, tvTf && tvTf.value);
     });
   }
 
@@ -884,4 +937,5 @@
   draw(candles, idx, trade);
   updateHUD();
   setTradingViewBadges();
+  ensureTradingViewWidget(tvSymbol && tvSymbol.value, tvTf && tvTf.value);
 })();
