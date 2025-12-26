@@ -22,6 +22,8 @@
 
   const speedSel = $("speed");
   const seedSel = $("seed");
+  const backtestTypeSel = $("backtestType");
+  const accountSizeInp = $("accountSize");
 
   const hudIndex = $("hudIndex");
   const hudPrice = $("hudPrice");
@@ -44,6 +46,7 @@
   const roSL = $("roSL");
   const roTP = $("roTP");
   const roOpenR = $("roOpenR");
+  const roAccount = $("roAccount");
 
   const btnClearJournal = $("btnClearJournal");
   const btnExport = $("btnExport");
@@ -65,6 +68,7 @@
   const tvForm = $("tvForm");
   const tvSymbol = $("tvSymbol");
   const tvTf = $("tvTf");
+  let tvScriptLoading = false;
   const bullColorInp = $("bullColor");
   const bearColorInp = $("bearColor");
 
@@ -94,6 +98,8 @@
 
   // ---------- Storage ----------
   const STORE_KEY = "backtestlab_journal_v1";
+  const ACCOUNT_KEY = "backtestlab_account_sizes_v1";
+  const DEFAULT_ACCOUNT_SIZES = { playback: 10000, tradingview: 10000 };
 
   function loadJournal() {
     try {
@@ -110,16 +116,22 @@
     localStorage.setItem(STORE_KEY, JSON.stringify(rows));
   }
 
-  function applyJournalGuard(rows) {
-    const list = Array.isArray(rows) ? rows.slice() : [];
-    if (list.length > MAX_JOURNAL_ENTRIES) {
-      const trimmed = list.slice(list.length - MAX_JOURNAL_ENTRIES);
-      setNotice(`Trimmed to last ${MAX_JOURNAL_ENTRIES} trades to prevent lag.`);
-      return trimmed;
+  function loadAccountSizes() {
+    try {
+      const raw = localStorage.getItem(ACCOUNT_KEY);
+      if (!raw) return { ...DEFAULT_ACCOUNT_SIZES };
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === "object" ? { ...DEFAULT_ACCOUNT_SIZES, ...parsed } : { ...DEFAULT_ACCOUNT_SIZES };
+    } catch {
+      return { ...DEFAULT_ACCOUNT_SIZES };
     }
-    setNotice("");
-    return list;
   }
+
+  function saveAccountSizes(map) {
+    localStorage.setItem(ACCOUNT_KEY, JSON.stringify(map));
+  }
+
+  let accountSizes = loadAccountSizes();
 
   // ---------- Deterministic RNG ----------
   function hashSeed(str) {
@@ -172,6 +184,13 @@
   function toNumber(value, fallback) {
     const v = Number(value);
     return Number.isFinite(v) ? v : fallback;
+  }
+
+  function formatCurrency(value) {
+    const abs = Math.abs(value);
+    const formatted = abs.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const sign = value < 0 ? "-" : "";
+    return `${sign}$${formatted}`;
   }
 
   function colorWithAlpha(hex, alpha = 0.7) {
@@ -398,6 +417,10 @@
   }
 
   function setReadout() {
+    if (roAccount) {
+      roAccount.textContent = formatCurrency(getAccountSize());
+    }
+
     if (!trade || !trade.isOpen) {
       roEntry.textContent = "—";
       roSL.textContent = "—";
@@ -424,6 +447,45 @@
     const dir = trade.direction === "long" ? 1 : -1;
     const move = (p - trade.entry) * dir;
     return move / baseRisk;
+  }
+
+  function currentBacktestType() {
+    return backtestTypeSel && backtestTypeSel.value ? backtestTypeSel.value : "playback";
+  }
+
+  function getAccountSize() {
+    const t = currentBacktestType();
+    const fallback = accountSizes[t] ?? DEFAULT_ACCOUNT_SIZES[t] ?? 10000;
+    const value = accountSizeInp ? toNumber(accountSizeInp.value, fallback) : fallback;
+    return Math.max(100, value);
+  }
+
+  function syncAccountSizeInput() {
+    if (!accountSizeInp) return;
+    const t = currentBacktestType();
+    const size = accountSizes[t] ?? DEFAULT_ACCOUNT_SIZES[t] ?? 10000;
+    accountSizeInp.value = size;
+    setReadout();
+    updateHUD();
+  }
+
+  function persistAccountSize() {
+    const size = getAccountSize();
+    const t = currentBacktestType();
+    accountSizes = { ...accountSizes, [t]: size };
+    try {
+      saveAccountSizes(accountSizes);
+    } catch {}
+    setReadout();
+    updateHUD();
+  }
+
+  function getPortion() {
+    return Math.max(1, Math.min(100, toNumber(portionInp && portionInp.value, 25)));
+  }
+
+  function getRiskUnit() {
+    return (getAccountSize() * getPortion()) / 100;
   }
 
   function maybeAutoClose() {
@@ -468,7 +530,7 @@
 
     const direction = directionSel.value;
     const orderType = orderTypeSel ? orderTypeSel.value : "market";
-    const portion = Math.max(1, Math.min(100, toNumber(portionInp && portionInp.value, 25)));
+    const portion = getPortion();
 
     const manualEntry = toNumber(entryPriceInp && entryPriceInp.value, NaN);
     const entry = (orderType === "market" || !Number.isFinite(manualEntry))
@@ -720,6 +782,56 @@
   }
 
   // ---------- TradingView bridge ----------
+  function ensureTradingViewWidget(symbolInput, intervalInput) {
+    const container = document.getElementById("tvChartContainer");
+    if (!container) return;
+
+    const symbol = (symbolInput || (tvSymbol && tvSymbol.value) || "OANDA:EURUSD").trim();
+    const interval = String(intervalInput || (tvTf && tvTf.value) || "60");
+    container.innerHTML = "";
+
+    const renderWidget = () => {
+      if (!window.TradingView || !window.TradingView.widget) return;
+      new window.TradingView.widget({
+        autosize: true,
+        symbol,
+        interval,
+        container_id: "tvChartContainer",
+        theme: "dark",
+        style: "1",
+        withdateranges: true,
+        allow_symbol_change: true,
+        hide_side_toolbar: false,
+        studies: [
+          "MACD@tv-basicstudies",
+          "RSI@tv-basicstudies",
+          "StochasticRSI@tv-basicstudies",
+          "BollingerBandsR@tv-basicstudies",
+          "EMA@tv-basicstudies",
+        ],
+        toolbar_bg: "rgba(3,7,18,0.95)",
+        locale: "en",
+      });
+    };
+
+    if (window.TradingView && window.TradingView.widget) {
+      renderWidget();
+      return;
+    }
+
+    if (tvScriptLoading) {
+      setTimeout(() => ensureTradingViewWidget(symbol, interval), 120);
+      return;
+    }
+
+    tvScriptLoading = true;
+    const script = document.createElement("script");
+    script.id = "tv-widget-script";
+    script.src = "https://s3.tradingview.com/tv.js";
+    script.onload = renderWidget;
+    document.body.appendChild(script);
+  }
+
   function setTradingViewBadges() {
     if (symbolTag && tvSymbol) {
       const clean = (tvSymbol.value || "EURUSD").trim();
@@ -732,6 +844,7 @@
         : `${tvTf.value}m`;
       tfTag.textContent = label;
     }
+    ensureTradingViewWidget(tvSymbol && tvSymbol.value, tvTf && tvTf.value);
   }
 
   function openTradingView() {
@@ -752,7 +865,9 @@
     if (trade && trade.isOpen) {
       const openR = computeOpenR();
       const sign = openR > 0 ? "+" : "";
-      hudOpenPL.textContent = `${sign}${openR.toFixed(2)}R`;
+      const openCash = openR * getRiskUnit();
+      const cashSign = openCash > 0 ? "+" : "";
+      hudOpenPL.textContent = `${sign}${openR.toFixed(2)}R (${cashSign}${formatCurrency(openCash)})`;
       hudOpenPL.style.color = openR >= 0 ? "rgba(34,197,94,.95)" : "rgba(239,68,68,.95)";
     } else {
       hudOpenPL.textContent = "—";
@@ -873,6 +988,9 @@
 
   seedSel.addEventListener("change", resetSession);
 
+  if (backtestTypeSel) backtestTypeSel.addEventListener("change", syncAccountSizeInput);
+  if (accountSizeInp) accountSizeInp.addEventListener("change", persistAccountSize);
+
   if (btnNextDay) btnNextDay.addEventListener("click", goToNextDayOpen);
   if (btnNextSession) btnNextSession.addEventListener("click", goToNextSession);
   if (btnNYSession) btnNYSession.addEventListener("click", goToNYSession);
@@ -912,6 +1030,7 @@
     tvForm.addEventListener("submit", (e) => {
       e.preventDefault();
       openTradingView();
+      ensureTradingViewWidget(tvSymbol && tvSymbol.value, tvTf && tvTf.value);
     });
   }
 
@@ -923,8 +1042,10 @@
   renderJournal();
   renderStats();
   updateColorSettings();
+  syncAccountSizeInput();
   setReadout();
   draw(candles, idx, trade);
   updateHUD();
   setTradingViewBadges();
+  ensureTradingViewWidget(tvSymbol && tvSymbol.value, tvTf && tvTf.value);
 })();

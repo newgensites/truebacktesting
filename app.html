@@ -153,6 +153,17 @@
             </div>
           </form>
         </div>
+
+        <div class="tv-indicators">
+          <div>
+            <h2>TradingView chart with indicators on</h2>
+            <p class="muted">All core TradingView indicators are available directly in the embedded chart. Use the Indicators button to layer RSI, MACD, EMAs, and anything else while you backtest.</p>
+            <p class="tiny muted">Updates automatically with the symbol/timeframe fields above.</p>
+          </div>
+          <div id="tvChartShell">
+            <div id="tvChartContainer" class="tv-chart" aria-label="TradingView advanced chart with indicators"></div>
+          </div>
+        </div>
       </section>
 
       <!-- RIGHT: TRADE + JOURNAL + ANALYTICS -->
@@ -169,6 +180,20 @@
             <h2>Place a trade</h2>
 
             <div class="form-grid">
+              <div class="field">
+                <label for="backtestType">Backtest type</label>
+                <select id="backtestType" class="select">
+                  <option value="playback" selected>Playback simulator</option>
+                  <option value="tradingview">TradingView bridge</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="accountSize">Account size</label>
+                <input id="accountSize" class="input" type="number" min="100" step="100" value="10000" />
+                <div class="tiny muted">Saved separately for each backtest type.</div>
+              </div>
+
               <div class="field">
                 <label for="direction">Side</label>
                 <select id="direction" class="select">
@@ -247,6 +272,10 @@
               <div class="readout">
                 <div class="muted tiny">Open R</div>
                 <div class="value" id="roOpenR">—</div>
+              </div>
+              <div class="readout">
+                <div class="muted tiny">Account</div>
+                <div class="value" id="roAccount">—</div>
               </div>
             </div>
 
