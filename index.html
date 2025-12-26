@@ -1,1 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BacktestLab — Replay Backtesting Simulator</title>
+  <meta name="description" content="Test and tweak your trading strategy in a real-feel environment—without risking capital." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html">
+        <span class="brand-mark">▣</span>
+        <span class="brand-name">BacktestLab</span>
+      </a>
 
+      <nav class="nav">
+        <a href="app.html">App</a>
+        <a href="docs.html">Docs</a>
+        <a href="pricing.html">Pricing</a>
+        <a href="contact.html" class="btn btn-ghost">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <p class="pill">Replay • Journal • Analytics</p>
+          <h1>Backtest your strategy like it’s live — without risking capital.</h1>
+          <p class="lead">
+            Candle-by-candle replay, fast execution, automatic journaling, and clean performance stats.
+            Build confidence before you go real.
+          </p>
+
+          <div class="hero-cta">
+            <a class="btn btn-primary" href="app.html">Open Replay App</a>
+            <a class="btn btn-ghost" href="docs.html">See how it works</a>
+          </div>
+
+          <div class="mini-metrics">
+            <div class="mini-card">
+              <div class="mini-title">Replay speed</div>
+              <div class="mini-value">0.5× → 10×</div>
+            </div>
+            <div class="mini-card">
+              <div class="mini-title">Journal</div>
+              <div class="mini-value">Auto-log trades</div>
+            </div>
+            <div class="mini-card">
+              <div class="mini-title">Analytics</div>
+              <div class="mini-value">Expectancy in R</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-card">
+          <div class="hero-card-top">
+            <div class="dot red"></div>
+            <div class="dot yellow"></div>
+            <div class="dot green"></div>
+            <span class="hero-card-title">Replay Session (Demo)</span>
+          </div>
+
+          <div class="hero-card-body">
+            <div class="mock-row">
+              <span class="tag">EURUSD</span>
+              <span class="tag">M5</span>
+              <span class="tag">Speed 4×</span>
+            </div>
+
+            <div class="mock-chart">
+              <div class="candle c1"></div>
+              <div class="candle c2"></div>
+              <div class="candle c3"></div>
+              <div class="candle c4"></div>
+              <div class="candle c5"></div>
+              <div class="candle c6"></div>
+              <div class="candle c7"></div>
+              <div class="candle c8"></div>
+              <div class="candle c9"></div>
+              <div class="candle c10"></div>
+              <div class="candle c11"></div>
+              <div class="candle c12"></div>
+            </div>
+
+            <div class="mock-controls">
+              <button class="chip" type="button">◀ Step</button>
+              <button class="chip" type="button">⏯ Play</button>
+              <button class="chip" type="button">▶ Step</button>
+              <span class="muted">Auto-journal ON</span>
+            </div>
+
+            <div class="mock-stats">
+              <div>
+                <div class="muted">Win rate</div>
+                <div class="stat">52%</div>
+              </div>
+              <div>
+                <div class="muted">Avg R</div>
+                <div class="stat">+0.28</div>
+              </div>
+              <div>
+                <div class="muted">Profit factor</div>
+                <div class="stat">1.34</div>
+              </div>
+            </div>
+
+            <p class="tiny muted">
+              This is the marketing preview. The real replay + journaling runs in the App page.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <h2>Everything you need to test an edge</h2>
+        <p class="sublead">A focused workflow: replay → execute → journal → review → iterate.</p>
+
+        <div class="feature-grid">
+          <div class="feature">
+            <h3>Real-feel replay</h3>
+            <p>Go candle-by-candle, control playback speed, and practice patience and timing.</p>
+          </div>
+          <div class="feature">
+            <h3>Fast execution</h3>
+            <p>Place Long/Short trades with SL/TP in R and consistent risk sizing.</p>
+          </div>
+          <div class="feature">
+            <h3>Auto journaling</h3>
+            <p>Every trade is logged with timestamps, outcome in R, and notes—no spreadsheets.</p>
+          </div>
+          <div class="feature">
+            <h3>Clean analytics</h3>
+            <p>Expectancy, profit factor, drawdown, streaks—see what actually works.</p>
+          </div>
+        </div>
+
+        <div class="callout">
+          <div>
+            <h3>Start free, upgrade later</h3>
+            <p class="muted">This MVP is the foundation. Add real data, accounts, and payments when you’re ready.</p>
+          </div>
+          <a class="btn btn-primary" href="pricing.html">View Pricing</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section alt">
+      <div class="container">
+        <h2>Built for strategy tweaking</h2>
+        <div class="two-col">
+          <div class="card">
+            <h3>Rules-first testing</h3>
+            <ul class="list">
+              <li>Define risk per trade</li>
+              <li>Choose SL/TP in R</li>
+              <li>Log reasons & mistakes</li>
+              <li>Filter results by setup</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Review like a pro</h3>
+            <ul class="list">
+              <li>Win rate + expectancy</li>
+              <li>Best/worst sessions</li>
+              <li>Streaks + drawdown</li>
+              <li>Export-ready journal</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container footer-cta">
+        <h2>Open the replay app and run your first session.</h2>
+        <p class="sublead">No sign-up required for the demo build.</p>
+        <a class="btn btn-primary" href="app.html">Launch Replay App</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="muted">© <span id="y"></span> BacktestLab. All rights reserved.</div>
+      <div class="footer-links">
+        <a href="docs.html">Docs</a>
+        <a href="pricing.html">Pricing</a>
+        <a href="contact.html">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
