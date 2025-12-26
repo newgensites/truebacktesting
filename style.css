@@ -331,6 +331,18 @@ canvas{
 }
 .controls-left,.controls-right{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
 
+.tradingview-bridge{
+  display:grid;
+  grid-template-columns: 1.1fr .9fr;
+  gap:14px;
+  padding:14px;
+  border-top:1px solid var(--line);
+  background: rgba(255,255,255,.03);
+}
+.tv-list{padding-left:16px; margin:12px 0 0}
+.tv-form{display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:10px; align-items:end}
+.tv-actions{display:flex; gap:10px; align-items:center; grid-column: 1/-1}
+
 .select, .input, .textarea{
   width:100%;
   padding:10px 12px;

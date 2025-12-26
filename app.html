@@ -86,6 +86,41 @@
             </select>
           </div>
         </div>
+
+        <div class="tradingview-bridge">
+          <div>
+            <h2>Backtest through TradingView</h2>
+            <p class="muted">Push the same symbol and timeframe into TradingView so you can use Bar Replay or the Strategy Tester with real market data.</p>
+            <ul class="tiny muted tv-list">
+              <li>We prefill the symbol/timeframe and open a new TradingView tab.</li>
+              <li>Use TradingView’s <strong>Bar Replay</strong> and <strong>Strategy Tester</strong> for data + metrics while you keep journaling here.</li>
+              <li>Best results with free symbols like <code>OANDA:EURUSD</code>, <code>FX:GBPUSD</code>, <code>BINANCE:BTCUSDT</code>.</li>
+            </ul>
+          </div>
+
+          <form class="tv-form" id="tvForm">
+            <div class="field">
+              <label for="tvSymbol">TradingView symbol</label>
+              <input id="tvSymbol" class="input" type="text" value="OANDA:EURUSD" />
+            </div>
+
+            <div class="field">
+              <label for="tvTf">Timeframe</label>
+              <select id="tvTf" class="select">
+                <option value="5" data-label="M5" selected>M5 (5m)</option>
+                <option value="15" data-label="M15">M15 (15m)</option>
+                <option value="60" data-label="H1">H1 (1h)</option>
+                <option value="240" data-label="H4">H4 (4h)</option>
+                <option value="D" data-label="1D">1D (daily)</option>
+              </select>
+            </div>
+
+            <div class="tv-actions">
+              <button class="btn btn-primary" type="submit">Open TradingView</button>
+              <span class="tiny muted">Opens a new tab with your inputs prefilled.</span>
+            </div>
+          </form>
+        </div>
       </section>
 
       <!-- RIGHT: TRADE + JOURNAL + ANALYTICS -->
