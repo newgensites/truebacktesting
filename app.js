@@ -72,6 +72,11 @@
   const bullColorInp = $("bullColor");
   const bearColorInp = $("bearColor");
 
+  const feedSymbolInp = $("feedSymbol");
+  const feedIntervalSel = $("feedInterval");
+  const btnLoadFeed = $("btnLoadFeed");
+  const feedStatus = $("feedStatus");
+
   const btnSnapshot = $("btnSnapshot");
   const journalNotice = $("journalNotice");
 
@@ -176,6 +181,77 @@
     return candles;
   }
 
+  function setFeedStatus(message, tone = "") {
+    if (!feedStatus) return;
+    feedStatus.textContent = message || "";
+    feedStatus.classList.remove("success", "error");
+    if (tone) feedStatus.classList.add(tone);
+  }
+
+  function applyCandles(sourceCandles) {
+    candles = Array.isArray(sourceCandles) ? [...sourceCandles] : [];
+    idx = Math.min(40, Math.max(0, candles.length - 1));
+    trade = null;
+    setReadout();
+    draw(candles, idx, trade);
+    updateHUD();
+  }
+
+  function resetToGenerated(showStatus = true) {
+    usingLiveFeed = false;
+    liveMeta = null;
+    if (showStatus) setFeedStatus("Using built-in simulator candles.", "");
+    applyCandles(genCandles(seedSel.value));
+  }
+
+  async function fetchBinanceCandles(symbol, interval) {
+    const cleanSymbol = symbol.replace(/[^A-Z0-9]/gi, "").toUpperCase();
+    const url = `https://api.binance.com/api/v3/klines?symbol=${encodeURIComponent(cleanSymbol)}&interval=${encodeURIComponent(interval)}&limit=500`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const payload = await res.json();
+    if (!Array.isArray(payload)) throw new Error("Unexpected response");
+
+    const mapped = payload
+      .map((row) => ({
+        open: Number(row[1]),
+        high: Number(row[2]),
+        low: Number(row[3]),
+        close: Number(row[4]),
+        time: row[0],
+      }))
+      .filter((c) => Number.isFinite(c.open) && Number.isFinite(c.high) && Number.isFinite(c.low) && Number.isFinite(c.close));
+
+    if (mapped.length === 0) throw new Error("No candles returned");
+    return mapped;
+  }
+
+  async function loadLiveFeed() {
+    if (!feedSymbolInp || !feedIntervalSel) return;
+    const symbol = (feedSymbolInp.value || "EURUSDT").trim();
+    const interval = feedIntervalSel.value || "5m";
+
+    setFeedStatus("Loading real feed…", "");
+    if (btnLoadFeed) btnLoadFeed.disabled = true;
+
+    try {
+      const fetched = await fetchBinanceCandles(symbol, interval);
+      liveCandles = fetched;
+      liveMeta = { symbol: symbol.toUpperCase(), interval };
+      usingLiveFeed = true;
+      setFeedStatus(`Live ${liveMeta.symbol} ${liveMeta.interval} feed loaded (${fetched.length} candles).`, "success");
+      if (symbolTag) symbolTag.textContent = liveMeta.symbol;
+      if (tfTag) tfTag.textContent = liveMeta.interval.toUpperCase();
+      applyCandles(liveCandles);
+    } catch (err) {
+      console.error("Live feed error", err);
+      setFeedStatus(`Live feed unavailable (${err.message}). Falling back to simulator.`, "error");
+      resetToGenerated(false);
+    } finally {
+      if (btnLoadFeed) btnLoadFeed.disabled = false;
+    }
+  }
+
   // ---------- Chart rendering ----------
   function round5(x) {
     return Math.round(x * 100000) / 100000;
@@ -249,6 +325,13 @@
     const H = canvas.height;
 
     ctx.clearRect(0, 0, W, H);
+
+    if (!candles || candles.length === 0) {
+      ctx.fillStyle = "rgba(234,240,255,.65)";
+      ctx.font = "16px ui-sans-serif, system-ui";
+      ctx.fillText("No candles loaded", 20, H / 2);
+      return;
+    }
 
     // View window around idx
     const windowSize = 80;
@@ -412,8 +495,14 @@
   let bullColor = bullColorInp ? bullColorInp.value : "#22c55e";
   let bearColor = bearColorInp ? bearColorInp.value : "#ef4444";
 
+  let liveCandles = [];
+  let usingLiveFeed = false;
+  let liveMeta = null;
+
   function currentPrice() {
-    return candles[idx].close;
+    if (!candles.length) return 0;
+    const i = Math.max(0, Math.min(idx, candles.length - 1));
+    return candles[i].close;
   }
 
   function setReadout() {
@@ -489,7 +578,7 @@
   }
 
   function maybeAutoClose() {
-    if (!trade || !trade.isOpen) return;
+    if (!trade || !trade.isOpen || !candles.length) return;
 
     const c = candles[idx];
     // Use candle high/low to detect hits
@@ -857,12 +946,13 @@
 
   // ---------- Playback controls ----------
   function updateHUD() {
+    const hasCandles = candles.length > 0;
     const p = currentPrice();
-    hudIndex.textContent = String(idx);
-    hudPrice.textContent = p.toFixed(5);
+    hudIndex.textContent = hasCandles ? String(idx) : "—";
+    hudPrice.textContent = hasCandles ? p.toFixed(5) : "—";
     setSessionLabel();
 
-    if (trade && trade.isOpen) {
+    if (trade && trade.isOpen && hasCandles) {
       const openR = computeOpenR();
       const sign = openR > 0 ? "+" : "";
       const openCash = openR * getRiskUnit();
@@ -877,11 +967,16 @@
 
   function setSessionLabel() {
     if (!sessionTag) return;
+    if (!candles.length) {
+      sessionTag.textContent = "Session —";
+      return;
+    }
     const label = currentSessionLabel(idx);
     sessionTag.textContent = `Session ${label}`;
   }
 
   function jumpTo(targetIndex) {
+    if (!candles.length) return;
     pause();
     const clamped = Math.max(0, Math.min(targetIndex, candles.length - 1));
     idx = clamped;
@@ -917,6 +1012,7 @@
   }
 
   function step(dir) {
+    if (!candles.length) return;
     idx = Math.min(candles.length - 1, Math.max(0, idx + dir));
     maybeAutoClose();
     maybeAutoBreakeven();
@@ -939,6 +1035,10 @@
 
   function play() {
     if (playing) return;
+    if (!candles.length) {
+      setFeedStatus("Load a real feed or use a seed session first.", "error");
+      return;
+    }
     playing = true;
     btnPlay.textContent = "Pause";
 
@@ -964,12 +1064,12 @@
 
   function resetSession() {
     pause();
-    candles = genCandles(seedSel.value);
-    idx = 40;
-    trade = null;
-    setReadout();
-    draw(candles, idx, trade);
-    updateHUD();
+    if (usingLiveFeed && liveCandles.length) {
+      applyCandles(liveCandles);
+      setFeedStatus(`Resetting live ${liveMeta?.symbol || ""} session.`, "");
+    } else {
+      resetToGenerated();
+    }
   }
 
   // ---------- Events ----------
@@ -987,6 +1087,8 @@
   });
 
   seedSel.addEventListener("change", resetSession);
+
+  if (btnLoadFeed) btnLoadFeed.addEventListener("click", loadLiveFeed);
 
   if (backtestTypeSel) backtestTypeSel.addEventListener("change", syncAccountSizeInput);
   if (accountSizeInp) accountSizeInp.addEventListener("change", persistAccountSize);
@@ -1043,9 +1145,8 @@
   renderStats();
   updateColorSettings();
   syncAccountSizeInput();
-  setReadout();
-  draw(candles, idx, trade);
-  updateHUD();
+  resetToGenerated(false);
   setTradingViewBadges();
   ensureTradingViewWidget(tvSymbol && tvSymbol.value, tvTf && tvTf.value);
+  loadLiveFeed();
 })();

@@ -31,7 +31,7 @@
         <div class="panel-top">
           <div class="panel-title">
             <h1>Playback Session</h1>
-            <p class="muted tiny">This is an MVP simulator using generated candle data (no real feed yet).</p>
+            <p class="muted tiny">Load real market candles or fall back to the built-in simulator.</p>
           </div>
 
           <div class="session-badges">
@@ -91,6 +91,30 @@
               <option value="B">Seed B</option>
               <option value="C">Seed C</option>
             </select>
+          </div>
+        </div>
+
+        <div class="feed-controls">
+          <div class="feed-field">
+            <label class="muted tiny" for="feedSymbol">Symbol</label>
+            <input id="feedSymbol" class="input" type="text" value="EURUSDT" autocomplete="off" />
+          </div>
+
+          <div class="feed-field">
+            <label class="muted tiny" for="feedInterval">Timeframe</label>
+            <select id="feedInterval" class="select">
+              <option value="1m">M1</option>
+              <option value="5m" selected>M5</option>
+              <option value="15m">M15</option>
+              <option value="1h">H1</option>
+              <option value="4h">H4</option>
+              <option value="1d">1D</option>
+            </select>
+          </div>
+
+          <div class="feed-actions">
+            <button class="btn btn-primary" id="btnLoadFeed" type="button">Load real feed</button>
+            <div class="tiny" id="feedStatus" aria-live="polite"></div>
           </div>
         </div>
 

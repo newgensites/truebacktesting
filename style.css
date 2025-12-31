@@ -332,6 +332,26 @@ canvas{
 }
 .controls-left,.controls-right{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
 
+.feed-controls{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px,1fr));
+  gap:12px;
+  padding:10px 14px 0;
+  border-top:1px solid var(--line);
+  background: rgba(255,255,255,.02);
+  align-items:end;
+}
+
+.feed-field label{display:block; margin-bottom:4px}
+
+.feed-actions{display:flex; flex-direction:column; gap:6px}
+
+#feedStatus{min-height:18px}
+
+#feedStatus.success{color:#34d399}
+
+#feedStatus.error{color:#f87171}
+
 .session-actions{
   display:flex;
   justify-content:space-between;
